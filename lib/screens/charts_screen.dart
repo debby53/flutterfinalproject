@@ -53,13 +53,14 @@ class _ChartsScreenState extends State<ChartsScreen> {
           PieChartSectionData(
             color: Colors.primaries[i % Colors.primaries.length],
             value: total,
-            title: '${category}\n\$${total.toStringAsFixed(2)}',
-            radius: 70,
+            title: '${total.toStringAsFixed(0)}%',
+            radius: 60,
             titleStyle: const TextStyle(
-              fontSize: 12,
+              fontSize: 14,
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
+            titlePositionPercentageOffset: 0.55,
           ),
         );
       }
@@ -67,39 +68,123 @@ class _ChartsScreenState extends State<ChartsScreen> {
     return sections;
   }
 
+  Widget buildLegend() {
+    final keys = categoryTotals.keys.toList();
+    return Wrap(
+      spacing: 12,
+      runSpacing: 8,
+      alignment: WrapAlignment.center,
+      children: [
+        for (int i = 0; i < keys.length; i++)
+          if (categoryTotals[keys[i]]! > 0)
+            LegendItem(
+              color: Colors.primaries[i % Colors.primaries.length],
+              text: keys[i],
+            ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final hasData = categoryTotals.values.any((total) => total > 0);
+
     return Scaffold(
-      appBar: AppBar(title: const Text("Spending Chart")),
-      body: categoryTotals.values.every((total) => total == 0)
-          ? const Center(child: Text("No expenses to display"))
-          : Padding(
-        padding: const EdgeInsets.all(16.0),
+      appBar: AppBar(
+        title: const Text("Spending Chart"),
+        backgroundColor: Colors.deepPurple,
+        elevation: 2,
+      ),
+      body: hasData
+          ? Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
         child: Column(
           children: [
-            const Text(
+            Text(
               "Spending Breakdown",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 20),
-            Expanded(
-              child: PieChart(
-                PieChartData(
-                  sections: getSections(),
-                  centerSpaceRadius: 50,
-                  sectionsSpace: 2,
-                  centerSpaceColor: Theme.of(context).scaffoldBackgroundColor,
-                ),
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.deepPurple.shade700,
               ),
             ),
             const SizedBox(height: 16),
+            Card(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+              elevation: 8,
+              shadowColor: Colors.deepPurple.withOpacity(0.3),
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: AspectRatio(
+                  aspectRatio: 1,
+                  child: PieChart(
+                    PieChartData(
+                      sections: getSections(),
+                      centerSpaceRadius: 70,
+                      sectionsSpace: 4,
+                      centerSpaceColor: Theme.of(context).scaffoldBackgroundColor,
+                      borderData: FlBorderData(show: false),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            buildLegend(),
+            const Spacer(),
             Text(
               "Total Spent: \$${totalSpent.toStringAsFixed(2)}",
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.deepPurple.shade800,
+              ),
             ),
+            const SizedBox(height: 16),
           ],
         ),
+      )
+          : const Center(
+        child: Text(
+          "No expenses to display",
+          style: TextStyle(fontSize: 18, color: Colors.grey),
+        ),
       ),
+    );
+  }
+}
+
+class LegendItem extends StatelessWidget {
+  final Color color;
+  final String text;
+
+  const LegendItem({
+    Key? key,
+    required this.color,
+    required this.text,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 20,
+          height: 14,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(4),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          text,
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+        ),
+      ],
     );
   }
 }

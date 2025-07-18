@@ -11,21 +11,48 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStateMixin {
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
   late Box<User> usersBox;
 
+  bool _passwordVisible = false;
+  String? usernameError;
+  String? passwordError;
+
+  bool _isButtonPressed = false;
+
   @override
   void initState() {
     super.initState();
     usersBox = Hive.box<User>('usersBox');
+    _passwordVisible = false;
   }
 
   void loginUser() {
+    setState(() {
+      usernameError = null;
+      passwordError = null;
+    });
+
     String username = usernameController.text.trim();
     String password = passwordController.text;
+
+    bool hasError = false;
+    if (username.isEmpty) {
+      usernameError = 'Username cannot be empty';
+      hasError = true;
+    }
+    if (password.isEmpty) {
+      passwordError = 'Password cannot be empty';
+      hasError = true;
+    }
+
+    if (hasError) {
+      setState(() {});
+      return;
+    }
 
     final user = usersBox.values.firstWhere(
           (u) => u.username == username && u.password == password,
@@ -47,10 +74,29 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  void _onButtonTapDown(TapDownDetails details) {
+    setState(() {
+      _isButtonPressed = true;
+    });
+  }
+
+  void _onButtonTapUp(TapUpDetails details) {
+    setState(() {
+      _isButtonPressed = false;
+    });
+  }
+
+  void _onButtonTapCancel() {
+    setState(() {
+      _isButtonPressed = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    final buttonOpacity = _isButtonPressed ? 0.7 : 1.0;
+
     return Scaffold(
-      // Use SafeArea to avoid status bar overlap
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -65,11 +111,10 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Avatar circle with icon
                 CircleAvatar(
                   radius: 60,
                   backgroundColor: Colors.white.withOpacity(0.3),
-                  child: Icon(
+                  child: const Icon(
                     Icons.lock_outline,
                     size: 70,
                     color: Colors.white,
@@ -94,7 +139,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 40),
 
-                // Username field
+                // Username TextField
                 TextField(
                   controller: usernameController,
                   style: const TextStyle(color: Colors.white),
@@ -104,6 +149,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     hintStyle: TextStyle(color: Colors.white70),
                     filled: true,
                     fillColor: Colors.white.withOpacity(0.2),
+                    errorText: usernameError,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide.none,
@@ -112,10 +158,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 20),
 
-                // Password field
+                // Password TextField with toggle visibility
                 TextField(
                   controller: passwordController,
-                  obscureText: true,
+                  obscureText: !_passwordVisible,
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
                     prefixIcon: const Icon(Icons.lock, color: Colors.white70),
@@ -123,39 +169,66 @@ class _LoginScreenState extends State<LoginScreen> {
                     hintStyle: TextStyle(color: Colors.white70),
                     filled: true,
                     fillColor: Colors.white.withOpacity(0.2),
+                    errorText: passwordError,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide.none,
+                    ),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _passwordVisible ? Icons.visibility : Icons.visibility_off,
+                        color: Colors.white70,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _passwordVisible = !_passwordVisible;
+                        });
+                      },
                     ),
                   ),
                 ),
                 const SizedBox(height: 30),
 
-                // Login button
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: loginUser,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: Colors.teal.shade900,
+                // Animated Login Button
+                GestureDetector(
+                  onTapDown: _onButtonTapDown,
+                  onTapUp: _onButtonTapUp,
+                  onTapCancel: _onButtonTapCancel,
+                  onTap: loginUser,
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 150),
+                    opacity: buttonOpacity,
+                    child: Container(
+                      width: double.infinity,
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
                         borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black45.withOpacity(buttonOpacity),
+                            blurRadius: 5,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
                       ),
-                      elevation: 5,
-                      shadowColor: Colors.black45,
-                    ),
-                    child: const Text(
-                      "Login",
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      child: const Center(
+                        child: Text(
+                          "Login",
+                          style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF004D40) // Dark teal
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ),
 
                 const SizedBox(height: 20),
 
-                // Register redirect text button
+                // Register redirect TextButton
                 TextButton(
                   onPressed: () {
                     Navigator.push(

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import '../models/savings_goal.dart';
-import '../services/notification_service.dart'; // import your notification service
+import '../services/notification_service.dart';
 
 class SavingsGoalScreen extends StatefulWidget {
   const SavingsGoalScreen({super.key});
@@ -33,7 +33,8 @@ class _SavingsGoalScreenState extends State<SavingsGoalScreen> {
         NotificationService.scheduleNotification(
           id: goal.key, // unique id per goal
           title: "Savings Goal Reminder",
-          body: "Your goal '${goal.title}' is due on ${goal.deadline.toLocal().toString().split(' ')[0]}",
+          body:
+          "Your goal '${goal.title}' is due on ${goal.deadline.toLocal().toString().split(' ')[0]}",
           scheduledDate: reminderDate,
         );
       }
@@ -41,7 +42,7 @@ class _SavingsGoalScreenState extends State<SavingsGoalScreen> {
   }
 
   void addGoal() {
-    final title = titleController.text;
+    final title = titleController.text.trim();
     final target = double.tryParse(targetAmountController.text);
     if (title.isEmpty || target == null || selectedDate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -54,6 +55,7 @@ class _SavingsGoalScreenState extends State<SavingsGoalScreen> {
       title: title,
       targetAmount: target,
       deadline: selectedDate!,
+      savedAmount: 0,
     );
 
     goalsBox.add(goal);
@@ -66,7 +68,8 @@ class _SavingsGoalScreenState extends State<SavingsGoalScreen> {
 
   void openEditDialog(SavingsGoal goal) {
     final editTitleController = TextEditingController(text: goal.title);
-    final editTargetController = TextEditingController(text: goal.targetAmount.toString());
+    final editTargetController =
+    TextEditingController(text: goal.targetAmount.toString());
 
     showDialog(
       context: context,
@@ -95,7 +98,7 @@ class _SavingsGoalScreenState extends State<SavingsGoalScreen> {
           ),
           ElevatedButton(
             onPressed: () {
-              final newTitle = editTitleController.text;
+              final newTitle = editTitleController.text.trim();
               final newTarget = double.tryParse(editTargetController.text);
               if (newTitle.isNotEmpty && newTarget != null && newTarget > 0) {
                 setState(() {
@@ -138,7 +141,7 @@ class _SavingsGoalScreenState extends State<SavingsGoalScreen> {
                 goal.savedAmount += 10;
                 goal.save();
               });
-              scheduleSavingsGoalReminders(); // reschedule on saved amount change if needed
+              scheduleSavingsGoalReminders(); // reschedule on saved amount change
             } else if (value == 'edit') {
               openEditDialog(goal);
             } else if (value == 'delete') {
