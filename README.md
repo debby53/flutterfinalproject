@@ -8,8 +8,11 @@ A **personal finance management Flutter app** designed to help students efficien
 
 
 <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/5d30fe1d-57d3-4fa9-b739-0fa7e80e02f7" />
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/a69685a8-903b-4c5b-8f7d-fe75a3cae287" />
 
----
+
+---<img width="1920" height="1080" alt="Screenshot (167)" src="https://github.com/user-attachments/assets/0a732823-6382-4465-8425-2ea3e180c293" />
+
 
 ## 🚀 Features
 
